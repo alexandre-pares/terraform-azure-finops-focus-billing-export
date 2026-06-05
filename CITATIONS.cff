@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: FinOps Terraform module to create a FOCUS billing export on Azure. 
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - orcid: "https://orcid.org/0009-0002-1956-1126"
+    given-names: Alexandre
+    family-names: PARÈS
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.13942773
+repository-code: >-
+  https://github.com/alexandre-pares/terraform-azure-finops-focus-billing-export
+repository-artifact: >-
+  https://registry.terraform.io/modules/alexandre-pares/finops-focus-billing-export/azure/latest
+abstract: >-
+  FinOps Terraform module to create a FOCUS billing export on Azure.
+keywords:
+  - terraform
+  - terraform-modules
+  - azure
+  - azurerm
+  - azure-billing
+  - azure-focus
+  - finops
+  - finops-focus
+  - billing-export
+license: Apache-2.0
