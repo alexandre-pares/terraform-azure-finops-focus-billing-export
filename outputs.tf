@@ -1,47 +1,59 @@
-output "export_id" {
-  description = <<-EOT
+output "resource_id" {
+  description = <<DESCRIPTION
   Id of the export.
 
-  E.g.: `/providers/Microsoft.Billing/billingAccounts/123456789/providers/Microsoft.CostManagement/exports/focus-export-for-billing-account-123456789`
-  EOT
+  Examples:
 
-  value = var.export_type == "FOCUS" ? azapi_resource.focus_export[0].id : null # Not yet implemented for other export types
+  - `/subscriptions/00000000-0000-4000-0000-000000000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-00000000-0000-4000-0000-0000` - Subscription
+  - `/providers/Microsoft.Billing/billingAccounts/000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-ea-000000` - Enterprise Agreement (EA)
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-mca-00000000-0000-5000-3000-0000` - Microsoft Customer Agreement (MCA)
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-4000-0000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-mpa-00000000-0000-4000-0000-0000` - Microsoft Partner Agreement (MPA)
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-billing-profile-0000-0000-000-00` - MCA or MPA's Billing profile
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/invoiceSections/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-invoice-section-0000-0000-000-00` - MCA or MPA's Invoice section
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/invoiceSections/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-invoice-section-00000000-0000-40` - MCA or MPA's Invoice section
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-4000-0000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/customers/00000000-0000-4000-0000-000000000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-csp-cutomer-00000000-0000-4000-0` - CSP Customer (via MPA)
+
+  DESCRIPTION
+
+  value = azapi_resource.focus_export.id
 }
 
 output "months_to_backfill" {
-  description = <<-EOT
+  description = <<DESCRIPTION
   List of months to backfill.
 
-  E.g.:
-  ```
+  Example if `var.start_date` is `2026-01` and `var.creation_date` is `2026-06-06`:
+
+  ```hcl
   [
     {
-      start = "2023-01-01T00:00:00Z"
-      end = "2023-01-31T00:00:00Z"
-    },
+      end_date   = "2026-01-31T00:00:00Z"
+      start_date = "2026-01-01T00:00:00Z"
+    }
     {
-      start = "2023-02-01T00:00:00Z"
-      end = "2023-02-28T00:00:00Z"
+      end_date   = "2026-02-28T00:00:00Z"
+      start_date = "2026-02-01T00:00:00Z"
+    }
+    {
+      end_date   = "2026-03-31T00:00:00Z"
+      start_date = "2026-03-01T00:00:00Z"
+    }
+    {
+      end_date   = "2026-04-30T00:00:00Z"
+      start_date = "2026-04-01T00:00:00Z"
+    }
+    {
+      end_date   = "2026-05-31T00:00:00Z"
+      start_date = "2026-05-01T00:00:00Z"
+    }
+    {
+      end_date   = "2026-06-06T00:00:00Z"
+      start_date = "2026-06-01T00:00:00Z"
     }
   ]
   ```
-  EOT
 
-  value = var.export_type == "FOCUS" ? module.months_to_backfill[0].months_to_backfill : null # Not yet implemented for other export types
-}
+  DESCRIPTION
 
-output "backfill_job_id" {
-  description = <<-EOT
-  List of Ids of backfill jobs.
-
-  E.g.: 
-  ```
-  [
-    "/providers/Microsoft.Billing/billingAccounts/123456789/providers/Microsoft.CostManagement/exports/focus-export-for-billing-account-123456789/Run/e8102b07-9d1e-4185-95fe-fe60d8d6ad5a",
-    "/providers/Microsoft.Billing/billingAccounts/123456789/providers/Microsoft.CostManagement/exports/focus-export-for-billing-account-123456789/Run/1089e775-8098-4d50-ae69-c22fd26ae7ef"
-  ]
-  ```
-  EOT
-
-  value = azapi_resource_action.backfill_job[*].id
+  value = try(module.months_to_backfill.months_to_backfill, {})
 }

@@ -1,10 +1,6 @@
-# Microsoft Azure Billing export Terraform Module
+# FinOps FOCUS billing export Terraform module for Microsoft Azure
 
-Terraform module witch creates billing export on Azure.
-
-[FOCUS v1.2](https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS_Spec/releases/tag/v1.2) billing export is now now available on Azure!
-
-This module will create a storage account for Azure billing exports.
+Terraform Module to create FOCUS billing exports for Azure. Supports EA, MCA and MPA billing accounts types. FOCUS billing exports can also be created at the subscription level.
 
 ## What is FOCUS™?
 
@@ -14,147 +10,53 @@ Supported by the FinOps Foundation, FOCUS™ aims to reduce complexity for FinOp
 
 Learn more about FOCUS in this [FinOps Foundation Insights article](https://www.finops.org/insights/focus-1-0-available/).
 
+## Supported scopes:
+
+- Enterprise Agreement (EA): Billing account, enrollment?, department?
+- Microsoft Customer Agreement (MCA), including MCA enterprise (MCA-E): Billing account, billing profile and invoice section
+- Microsoft Partner Agreement (MPA): Billing account, customer and billing profile
+- Subscription and resource group
+
+[-> Learn more about supported scopes](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#understand-export-data-types)
+
+## Supported FOCUS versions
+
+[FOCUS v1.2](https://github.com/FinOps-Open-Cost-and-Usage-Spec/FOCUS_Spec/releases/tag/v1.2) billing export is now now available on Azure!
+
+- `1.2-preview`
+- `1.0r2`
+- `1.0`
+- `1.0-preview`
+
+[-> Learn more about Azure FOCUS export versions](https://learn.microsoft.com/en-us/azure/cost-management-billing/dataset-schema/cost-usage-details-focus)
+
+Microsoft is not 100% aligned with the FOCUS specification, therefore we recommend to check [the conformance gap report](https://learn.microsoft.com/en-us/cloud-computing/finops/focus/conformance-full-report).
+
 ## Usage
 
 Detailed examples are available under the [`./examples`](./examples/) directory.
 
-<details>
-
-<summary>Create a FOCUS export for a billing account with a new resource group, storage account and container</summary>
-
 ```hcl
-module "azurerm_billing_export" {
-  source = "IAmFrench/billing-export/azurerm"
+module "finops_focus_billing_export" {
+  source = "../.."
 
-  version = "1.1.2" # change this to your desired version, https://www.terraform.io/language/expressions/version-constraints
-
-  create_resource_group   = true
-  resource_group_name     = "rg-focus-export-001"
-  resource_group_location = "Switzerland North"
-
-  create_storage_account = true
-  storage_account_name   = "billingexportokjdlksa"
-
-  create_storage_container = true
-  storage_container_name   = "focus"
-
-  export_type    = "FOCUS"
+  name           = substr("finops-focus-billing-export-for-sub-${var.subscription_id}", 0, 64)
+  description    = "FinOps FOCUS billing export for subscription ${var.subscription_id}"
   export_version = "1.2-preview"
+  scope_id       = "/subscriptions/${var.subscription_id}"
 
-  export_scope_and_id = {
-    scope = "billing-account"
-    id    = "123456789"
-  }
+  storage_account_id = module.focus_billing_storage_account.resource_id
+  container_name     = "focus"
 
-  export_start_date    = "2024-01-01"
-  export_creation_date = "2025-07-01"
-  export_end_date      = "2050-01-01"
+  directory = "v1.2-preview/sub_${var.subscription_id}"
+
+  creation_date = "2026-06-07"
+  start_date    = "2026-01-01"
+  end_date      = "2050-01-01"
 
   enable_backfill = true
-
-  export_directory = "billing_account_123456789"
-
-  export_name = "focus-export-for-billing-account-123456789"
 }
 ```
-
-</details>
-
-
-<details>
-
-<summary>Create a FOCUS export for a billing account with an existing resource group, storage account and container</summary>
-
-```hcl
-module "azurerm_billing_export" {
-  source = "IAmFrench/billing-export/azurerm"
-
-  version = "1.1.2" # change this to your desired version, https://www.terraform.io/language/expressions/version-constraints
-
-  create_resource_group   = false
-  resource_group_name     = "rg-focus-export-001"
-  resource_group_location = "Switzerland North"
-
-  create_storage_account = false
-  storage_account_name   = "billingexportokjdlksa"
-
-  create_storage_container = false
-  storage_container_name   = "focus"
-
-  export_type    = "FOCUS"
-  export_version = "1.2-preview"
-
-  export_scope_and_id = {
-    scope = "billing-account"
-    id    = "123456789"
-  }
-
-  export_start_date    = "2024-01-01"
-  export_creation_date = "2025-07-01"
-  export_end_date      = "2050-01-01"
-
-  enable_backfill = true
-
-  export_directory = "billing_account_123456789"
-
-  export_name = "focus-export-for-billing-account-123456789"
-}
-```
-
-</details>
-
-
-<details>
-
-<summary>Create a FOCUS export for a subcription with a existing resource group but new storage account and container</summary>
-
-```hcl
-module "azurerm_billing_export" {
-  source = "IAmFrench/billing-export/azurerm"
-
-  version = "1.1.2" # change this to your desired version, https://www.terraform.io/language/expressions/version-constraints
-
-  create_resource_group   = false
-  resource_group_name     = "rg-focus-export-001"
-  resource_group_location = "Switzerland North"
-
-  create_storage_account = true
-  storage_account_name   = "billingexportzfcxfd"
-
-  create_storage_container = true
-  storage_container_name   = "focus"
-
-  export_type    = "FOCUS"
-  export_version = "1.2-preview"
-
-  export_scope_and_id = {
-    scope = "subscription"
-    id    = "12345-uuid-6789"
-  }
-
-  export_start_date    = "2024-01-01"
-  export_creation_date = "2025-07-01"
-  export_end_date      = "2050-01-01"
-
-  enable_backfill = true
-
-  export_directory = "subscription_12345-uuid-6789"
-
-  export_name = "focus-export-for-subscription-12345-uuid-6789"
-}
-```
-
-</details>
-
-
-## Roadmap & Features
-
-- [X] FOCUS `1.2-preview` export 
-- [X] FOCUS `1.0` & `1.0r2` export ([Improved export experience](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports))
-- [X] Subscription export (`export_scope_and_id` = `subscription`)
-- [X] Billing Account export (`export_scope_and_id` = `billing-account`)
-- [X] Automatic backfill from `export_start_date` to export's creation date (`export_creation_date`)
-- [X] Retry implementation (if we hit the rate limit `429 Too Many Requests`)
 
 ## Limitations
 
@@ -234,25 +136,22 @@ Check if your subscription type is supported here: https://learn.microsoft.com/e
 
 </details>
 
-Register `Microsoft.CostManagementExports` from the source subscription (`var.export_scope_and_id.id`).
+Register `Microsoft.CostManagementExports` from the source subscription.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.0 |
-| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | >= 2.0.0-beta, < 3.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.113.0, < 5.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.12.1, < 1.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.8 |
+| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | ~> 2.10 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.14 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | >= 2.0.0-beta, < 3.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 3.113.0, < 5.0 |
-| <a name="provider_time"></a> [time](#provider\_time) | >= 0.12.1, < 1.0.0 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | ~> 2.10 |
 
 ## Modules
 
@@ -266,42 +165,27 @@ Register `Microsoft.CostManagementExports` from the source subscription (`var.ex
 | ---- | ---- |
 | [azapi_resource.focus_export](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) | resource |
 | [azapi_resource_action.backfill_job](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource_action) | resource |
-| [azurerm_resource_group.main](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
-| [azurerm_storage_account.export](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) | resource |
-| [azurerm_storage_container.focus](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
-| [time_static.export_creation_date](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
-| [azurerm_resource_group.main](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
-| [azurerm_storage_account.export](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/storage_account) | data source |
-| [azurerm_storage_container.focus](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/storage_container) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_create_resource_group"></a> [create\_resource\_group](#input\_create\_resource\_group) | Option to create or not the Resource Group for the billing export.<br/><br/>If set to `false`, this module will not create the resource group and will <br/>instead lookup for a resource group with the name `var.resource_group_name`.<br/><br/>E.g.: `true`, `false` | `bool` | `false` | no |
-| <a name="input_create_storage_account"></a> [create\_storage\_account](#input\_create\_storage\_account) | Option to create or not the storage account for the billing export.<br/><br/>If set to `false`, this module will not create the storage account.<br/><br/>E.g.: `true`, `false` | `bool` | `true` | no |
-| <a name="input_create_storage_container"></a> [create\_storage\_container](#input\_create\_storage\_container) | Option to create or not the Storage Container for the billing export.<br/><br/>If set to `false`, this module will not create the storage Container and will<br/>instead lookup for a storage container with `var.storage_container_name` in <br/>the `var.storage_account_name` Storage Account.<br/><br/>Note: If `var.create_storage_account` is set to `true`, then this variable <br/>MUST be set to `true`.<br/><br/>E.g.: `true`, `false` | `bool` | `true` | no |
-| <a name="input_enable_backfill"></a> [enable\_backfill](#input\_enable\_backfill) | Option to enable or not a backfill for the export.<br/><br/>E.g.: `true`, `false` | `bool` | `false` | no |
-| <a name="input_export_creation_date"></a> [export\_creation\_date](#input\_export\_creation\_date) | Creation date of the export.<br/><br/>E.g.: `2024-07-22` | `string` | n/a | yes |
-| <a name="input_export_directory"></a> [export\_directory](#input\_export\_directory) | Directory to place the billing export in.<br/><br/>Validation: Directory name cannot end with a forward slash(/) or dot(.)<br/><br/>E.g.: `subscription_63aa77b3-5e14-4c6d-a895-27f9d8443e37` with <br/>`63aa77b3-5e14-4c6d-a895-27f9d8443e37` being the subscription id | `string` | n/a | yes |
-| <a name="input_export_end_date"></a> [export\_end\_date](#input\_export\_end\_date) | End date of the export.<br/><br/>Validation: Date should be in the future and it must be the first day of the month.<br/><br/>E.g.: `2050-01-01` | `string` | `"2050-01-01"` | no |
-| <a name="input_export_name"></a> [export\_name](#input\_export\_name) | Name of the billing export. <br/><br/>Validation: Export name must be alphanumeric, without whitespace, and 3 to <br/>64 characters in length.<br/><br/>E.g.: `focus-export-for-sub-63aa77b3-5e14-4c6d-a895-27f9d8443e37` (57 <br/>characters) | `string` | n/a | yes |
-| <a name="input_export_scope_and_id"></a> [export\_scope\_and\_id](#input\_export\_scope\_and\_id) | Scope and the corresponding id for the billing export.<br/><br/>Valid values for scope are:<br/>- `billing-account` for an export at the billing account level (recommended)<br/>- `subscription` for an export at the subscription level<br/><br/>E.g.:<pre>{<br/>  scope = "billing-account"<br/>  id    = "1234567890"<br/>}</pre> | <pre>object({<br/>    scope = string<br/>    id    = string<br/>  })</pre> | n/a | yes |
-| <a name="input_export_start_date"></a> [export\_start\_date](#input\_export\_start\_date) | Start date of the export.<br/>You can go as far as 9 years in the past.<br/><br/>Validation: Date should be in the past and it must be the first day of the month.<br/><br/>E.g.: `2024-01-01` | `string` | `"2020-01-01"` | no |
-| <a name="input_export_type"></a> [export\_type](#input\_export\_type) | Version of the billing export.<br/><br/>Valid values: <br/>- `FOCUS` for Cost and usage details (FOCUS), <br/>- `AMORTIZED` for Cost and usage details (amortized), <br/>- `ACTUAL` for Cost and usage details (usage only)<br/><br/>Learn more about export types: https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#schedule-frequency<br/><br/>E.g.: `FOCUS`, `AMORTIZED` or `ACTUAL` | `string` | n/a | yes |
-| <a name="input_export_version"></a> [export\_version](#input\_export\_version) | Version of the billing export. Should be use with `export_type`.<br/><br/>Valid values are:<br/>- `1.2-preview`, `1.0r2` & `1.0` for `FOCUS`<br/>- `2023-12-01-preview` for Cost and usage details (EA, MCA, MPA and CSP)<br/>- `2019-11-01` for Cost and usage details (MOSA)<br/><br/>E.g.: `1.2-preview`, `1.0r2`, `1.0`, `2023-12-01-preview`, `2019-11-01` | `string` | n/a | yes |
-| <a name="input_resource_group_location"></a> [resource\_group\_location](#input\_resource\_group\_location) | Location of the Storage Account.<br/><br/>Note: if `var.create_resource_group` is set to `true`, then this variable MUST<br/>be set.<br/><br/>E.g.: `Switzerland North` | `string` | `null` | no |
-| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group where the Storage account is located in.<br/><br/>E.g.: `rg-finops-export-001` | `string` | n/a | yes |
-| <a name="input_storage_account_location"></a> [storage\_account\_location](#input\_storage\_account\_location) | Location of the Storage Account.<br/><br/>If `null`, the Storage Account will be created in the location linked to the resource group.<br/><br/>E.g.: `Switzerland North` | `string` | `null` | no |
-| <a name="input_storage_account_name"></a> [storage\_account\_name](#input\_storage\_account\_name) | Name of the Storage Account.<br/><br/>The Storage Account will be created with this name if `var.create_storage_account` is `true`.<br/><br/>E.g.: `billingexports` | `string` | n/a | yes |
-| <a name="input_storage_container_name"></a> [storage\_container\_name](#input\_storage\_container\_name) | Name of the Storage Container.<br/><br/>The Storage Container will be created with this name if `var.create_storage_container` is `true`.<br/><br/>E.g.: `focus-v1.0` | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all created resources.<br/><br/>E.g.:<pre>{<br/>  createdBy = "Terraform"<br/>}</pre> | `map(string)` | <pre>{<br/>  "createdBy": "Terraform"<br/>}</pre> | no |
+| <a name="input_container_name"></a> [container\_name](#input\_container\_name) | Name of the container.<br/><br/>  Example:<br/><br/>  - `focus` | `string` | n/a | yes |
+| <a name="input_creation_date"></a> [creation\_date](#input\_creation\_date) | Creation date of the export.<br/><br/>  This will be used only to create the backfill months list if `enable_backfill` is set to `true`.<br/><br/>  Examples:<br/><br/>  - `2025-12-22`<br/>  - `2026-01-05`<br/>  - `2026-06-06` | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | Description of the FinOps FOCUS billing export. | `string` | n/a | yes |
+| <a name="input_directory"></a> [directory](#input\_directory) | Directory to place the billing export in.<br/><br/>Validation: Directory name cannot end with a forward slash(/) or dot(.)<br/><br/>Example:<br/><br/>- `subscription_63aa77b3-5e14-4c6d-a895-27f9d8443e37` with `63aa77b3-5e14-4c6d-a895-27f9d8443e37` being the subscription id | `string` | n/a | yes |
+| <a name="input_enable_backfill"></a> [enable\_backfill](#input\_enable\_backfill) | Enable the export backfill.<br/><br/>  If set to `true`, the module willrequest backfill based on `var.start_date` and `car.creation_date`.<br/><br/>  This option is recommended rather than going via the Azure portal (portal.azure.com) as it's limited to 13 months and you need to request one month at a time (if 13 months then 13 requests) thus this module to automate this task.<br/><br/>  Please note that retention is limited to 7 years and a `var.start_date` older than the current date will fail.<br/><br/>  Learn more: https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#data-retention-limits-by-dataset<br/><br/>  Examples:<br/><br/>  - `true`<br/>  - `false` | `bool` | n/a | yes |
+| <a name="input_end_date"></a> [end\_date](#input\_end\_date) | End date of the export.<br/><br/>  Validation: Date should be in the future and it must be the first day of the month.<br/><br/>  Example:<br/><br/>  - `2050-01-01` | `string` | n/a | yes |
+| <a name="input_export_version"></a> [export\_version](#input\_export\_version) | Version of the FinOps FOCUS billing export.<br/><br/>  Learn more: https://learn.microsoft.com/en-us/azure/cost-management-billing/dataset-schema/cost-usage-details-focus<br/><br/>  Examples:<br/><br/>  - `1.2-preview`<br/>  - `1.0`<br/>  - `1.0r2`<br/>  - `1.0-preview` | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | Name of the FinOps FOCUS billing export.<br/><br/>  Validation: Export name must be alphanumeric, without whitespace, and 3 to 64 characters in length.<br/><br/>  Example:<br/><br/>  - `focus-export-for-sub-63aa77b3-5e14-4c6d-a895-27f9d8443e37` (57 characters) | `string` | n/a | yes |
+| <a name="input_scope_id"></a> [scope\_id](#input\_scope\_id) | Id of the scope of of the FinOps FOCUS billing export.<br/><br/>  Can be a subscription, billing account, invoice section, CSP customer, etc.<br/><br/>  Examples:<br/><br/>  - `/subscriptions/00000000-0000-4000-0000-000000000000` - Subscription<br/>  - `/providers/Microsoft.Billing/billingAccounts/000000`- Enterprise Agreement (EA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31` - Microsoft Customer Agreement (MCA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30` - Microsoft Partner Agreement (MPA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/billingProfiles/0000-0000-000-000` - MCA Billing profile<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/billingProfiles/00000000-0000-4000-0000-000000000000` - MPA Billing profile<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/billingProfiles/0000-0000-000-000/invoiceSections/0000-0000-000-000` - MCA Invoice section<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/billingProfiles/0000-0000-000-000/invoiceSections/00000000-0000-4000-0000-000000000000` - MCA Invoice section<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/customers/00000000-0000-4000-0000-000000000000` - CSP Customer (attached to a MPA) | `string` | n/a | yes |
+| <a name="input_start_date"></a> [start\_date](#input\_start\_date) | Start date of the export.<br/>You can go as far as 7 years in the past.<br/>Date should be:<br/>- in the past<br/>- before `var.creation_date`<br/>- the first day of the month<br/><br/>Learn more: https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#data-retention-limits-by-dataset<br/><br/><br/>Examples:<br/><br/>- `2022-05-01`<br/>- `2026-01-01`<br/>- `2026-06-01` | `string` | n/a | yes |
+| <a name="input_storage_account_id"></a> [storage\_account\_id](#input\_storage\_account\_id) | Id of the Storage Account.<br/><br/>  Example:<br/><br/>  - `/subscriptions/00000000-0000-4000-0000-000000000000/resourceGroups/rg-finops-focus-j524/providers/Microsoft.Storage/storageAccounts/stfinrandomid` | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_backfill_job_id"></a> [backfill\_job\_id](#output\_backfill\_job\_id) | List of Ids of backfill jobs.<br/><br/>E.g.:<pre>[<br/>  "/providers/Microsoft.Billing/billingAccounts/123456789/providers/Microsoft.CostManagement/exports/focus-export-for-billing-account-123456789/Run/e8102b07-9d1e-4185-95fe-fe60d8d6ad5a",<br/>  "/providers/Microsoft.Billing/billingAccounts/123456789/providers/Microsoft.CostManagement/exports/focus-export-for-billing-account-123456789/Run/1089e775-8098-4d50-ae69-c22fd26ae7ef"<br/>]</pre> |
-| <a name="output_export_id"></a> [export\_id](#output\_export\_id) | Id of the export.<br/><br/>E.g.: `/providers/Microsoft.Billing/billingAccounts/123456789/providers/Microsoft.CostManagement/exports/focus-export-for-billing-account-123456789` |
-| <a name="output_months_to_backfill"></a> [months\_to\_backfill](#output\_months\_to\_backfill) | List of months to backfill.<br/><br/>E.g.:<pre>[<br/>  {<br/>    start = "2023-01-01T00:00:00Z"<br/>    end = "2023-01-31T00:00:00Z"<br/>  },<br/>  {<br/>    start = "2023-02-01T00:00:00Z"<br/>    end = "2023-02-28T00:00:00Z"<br/>  }<br/>]</pre> |
+| <a name="output_months_to_backfill"></a> [months\_to\_backfill](#output\_months\_to\_backfill) | List of months to backfill.<br/><br/>  Example if `var.start_date` is `2026-01` and `var.creation_date` is `2026-06-06`:<pre>hcl<br/>  [<br/>    {<br/>      end_date   = "2026-01-31T00:00:00Z"<br/>      start_date = "2026-01-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-02-28T00:00:00Z"<br/>      start_date = "2026-02-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-03-31T00:00:00Z"<br/>      start_date = "2026-03-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-04-30T00:00:00Z"<br/>      start_date = "2026-04-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-05-31T00:00:00Z"<br/>      start_date = "2026-05-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-06-06T00:00:00Z"<br/>      start_date = "2026-06-01T00:00:00Z"<br/>    }<br/>  ]</pre> |
+| <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id) | Id of the export.<br/><br/>  Examples:<br/><br/>  - `/subscriptions/00000000-0000-4000-0000-000000000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-00000000-0000-4000-0000-0000` - Subscription<br/>  - `/providers/Microsoft.Billing/billingAccounts/000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-ea-000000` - Enterprise Agreement (EA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-mca-00000000-0000-5000-3000-0000` - Microsoft Customer Agreement (MCA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-4000-0000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-mpa-00000000-0000-4000-0000-0000` - Microsoft Partner Agreement (MPA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-billing-profile-0000-0000-000-00` - MCA or MPA's Billing profile<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/invoiceSections/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-invoice-section-0000-0000-000-00` - MCA or MPA's Invoice section<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/invoiceSections/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-invoice-section-00000000-0000-40` - MCA or MPA's Invoice section<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-4000-0000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/customers/00000000-0000-4000-0000-000000000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-csp-cutomer-00000000-0000-4000-0` - CSP Customer (via MPA) |
 <!-- END_TF_DOCS -->

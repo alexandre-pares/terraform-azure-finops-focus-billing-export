@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: FinOps Terraform module to create a FOCUS billing export on Azure. 
+title: FinOps Terraform module to create a FOCUS billing export on Azure.
 message: >-
   If you use this software, please cite it using the
   metadata from this file.

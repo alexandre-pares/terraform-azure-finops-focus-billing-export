@@ -1,6 +1,19 @@
-output "months_to_backfill" {
+output "export_resource_id" {
   description = <<DESCRIPTION
-  List of months to backfill.
+  Id of the export.
+
+  Example:
+
+  - `/subscriptions/00000000-0000-4000-0000-000000000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-00000000-0000-4000-0000-0000`
+
+  DESCRIPTION
+
+  value = module.finops_focus_billing_export.resource_id
+}
+
+output "months_backfilled" {
+  description = <<DESCRIPTION
+  List of months backfilled.
 
   Example if `var.start_date` is `2026-01` and `var.creation_date` is `2026-06-06`:
 
@@ -35,5 +48,5 @@ output "months_to_backfill" {
 
   DESCRIPTION
 
-  value = local.months_to_backfill
+  value = module.finops_focus_billing_export.months_to_backfill
 }
