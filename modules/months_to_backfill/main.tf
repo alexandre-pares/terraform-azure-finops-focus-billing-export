@@ -1,20 +1,20 @@
 /* ---------------------------- Export start date --------------------------- */
 resource "time_static" "export_start_date" {
-  rfc3339 = "${var.export_start_date}T00:00:00Z"
+  rfc3339 = "${var.start_date}T00:00:00Z"
 }
 
 /* ----------------------------- Export end date ---------------------------- */
 resource "time_static" "export_end_date" {
-  rfc3339 = "${var.export_end_date}T00:00:00Z"
+  rfc3339 = "${var.end_date}T00:00:00Z"
 }
 
 locals {
   # Years of difference between export creation date and export start date
   # Max 9 years
-  export_year_difference = substr(var.export_creation_date, 0, 4) - substr(var.export_start_date, 0, 4)
+  export_year_difference = substr(var.creation_date, 0, 4) - substr(var.start_date, 0, 4)
 
   # Months for (the current year) of difference between export creation date and export start date
-  export_month_difference = substr(var.export_creation_date, 5, 2) - substr(var.export_start_date, 5, 2)
+  export_month_difference = substr(var.creation_date, 5, 2) - substr(var.start_date, 5, 2)
 
   # Months of difference between export creation date and export start date
   export_total_month_difference = local.export_year_difference * 12 + local.export_month_difference
@@ -26,7 +26,7 @@ resource "time_offset" "backfill_start_date" {
   # Except the last month (month of the export creation date)
   count = local.export_total_month_difference + 2
 
-  base_rfc3339  = "${var.export_start_date}T00:00:00Z"
+  base_rfc3339  = "${var.start_date}T00:00:00Z"
   offset_months = count.index
 }
 
@@ -51,8 +51,8 @@ locals {
     ],
     # Create a backfill for the current month
     [{
-      start_date = "${substr(var.export_creation_date, 0, 7)}-01T00:00:00Z"
-      end_date   = "${var.export_creation_date}T00:00:00Z"
+      start_date = "${substr(var.creation_date, 0, 7)}-01T00:00:00Z"
+      end_date   = "${var.creation_date}T00:00:00Z"
     }]
   )
 }

@@ -1,358 +1,209 @@
-/* ----------------- Storage Account to create the export in ---------------- */
-variable "storage_account_name" {
-  description = <<-EOT
-  Name of the Storage Account.
-  
-  The Storage Account will be created with this name if `var.create_storage_account` is `true`.
-  
-  E.g.: `billingexports`
-  EOT
+variable "storage_account_id" {
+  description = <<DESCRIPTION
+  Id of the Storage Account.
 
-  type     = string
-  nullable = false
+  Example:
 
-  validation {
-    condition     = can(regex("^[a-z0-9]{3,24}$", var.storage_account_name))
-    error_message = "The field can contain only lowercase letters and numbers. Name must be between 3 and 24 characters."
-  }
-}
+  - `/subscriptions/00000000-0000-4000-0000-000000000000/resourceGroups/rg-finops-focus-j524/providers/Microsoft.Storage/storageAccounts/stfinrandomid`
 
-variable "storage_account_location" {
-  description = <<-EOT
-  Location of the Storage Account.
-  
-  If `null`, the Storage Account will be created in the location linked to the resource group.
-  
-  E.g.: `Switzerland North`
-  EOT
-
-  type     = string
-  default  = null
-  nullable = true
-}
-
-variable "storage_container_name" {
-  description = <<-EOT
-  Name of the Storage Container.
-  
-  The Storage Container will be created with this name if `var.create_storage_container` is `true`.
-  
-  E.g.: `focus-v1.0`
-  EOT
+  DESCRIPTION
 
   type     = string
   nullable = false
 }
 
-/* --- Option to create or not the storage account for the billing export --- */
-variable "create_storage_account" {
-  description = <<-EOT
-  Option to create or not the storage account for the billing export.
-  
-  If set to `false`, this module will not create the storage account.
+variable "container_name" {
+  description = <<DESCRIPTION
+  Name of the container.
 
-  E.g.: `true`, `false`
-  EOT
+  Example:
 
-  type     = bool
-  default  = true
-  nullable = false
-}
+  - `focus`
 
-/* ----- Option to create or not the container within a storage account ----- */
-variable "create_storage_container" {
-  description = <<-EOT
-  Option to create or not the Storage Container for the billing export.
-  
-  If set to `false`, this module will not create the storage Container and will
-  instead lookup for a storage container with `var.storage_container_name` in 
-  the `var.storage_account_name` Storage Account.
-  
-  Note: If `var.create_storage_account` is set to `true`, then this variable 
-  MUST be set to `true`.
-
-  E.g.: `true`, `false`
-  EOT
-
-  type     = bool
-  default  = true
-  nullable = false
-}
-
-/* -------- Name of the resource group to place created resources in -------- */
-variable "resource_group_name" {
-  description = <<-EOT
-  Name of the resource group where the Storage account is located in.
-  
-  E.g.: `rg-finops-export-001`
-  EOT
-  type        = string
-  nullable    = false
-}
-
-/* --------------------- Location of the resource group --------------------- */
-variable "resource_group_location" {
-  description = <<-EOT
-  Location of the Storage Account.
-  
-  Note: if `var.create_resource_group` is set to `true`, then this variable MUST
-  be set.
-
-  E.g.: `Switzerland North`
-  EOT
-
-  type     = string
-  default  = null
-  nullable = true
-}
-
-/* ---- Option to create or not the resource group for the billing export --- */
-variable "create_resource_group" {
-  description = <<-EOT
-  Option to create or not the Resource Group for the billing export.
-  
-  If set to `false`, this module will not create the resource group and will 
-  instead lookup for a resource group with the name `var.resource_group_name`.
-
-  E.g.: `true`, `false`
-  EOT
-
-  type     = bool
-  default  = false
-  nullable = false
-}
-
-/* ------------------------------- Export type ------------------------------ */
-variable "export_type" {
-  description = <<-EOT
-  Version of the billing export.
-  
-  Valid values: 
-  - `FOCUS` for Cost and usage details (FOCUS), 
-  - `AMORTIZED` for Cost and usage details (amortized), 
-  - `ACTUAL` for Cost and usage details (usage only)
-
-  Learn more about export types: https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#schedule-frequency
-  
-  E.g.: `FOCUS`, `AMORTIZED` or `ACTUAL`
-  EOT
+  DESCRIPTION
 
   type     = string
   nullable = false
-
-  validation {
-    condition = contains([
-      # FOCUS
-      # Cost and usage details (FOCUS)
-      "FOCUS",
-
-      # AMORTIZED
-      # Cost and usage details (amortized)
-      # "AMORTIZED",
-
-      # ACTUAL
-      # Cost and usage details (usage only)
-      # "ACTUAL",
-      ],
-      var.export_type
-    )
-    error_message = "Unsupported export type. Only `FOCUS` export type is supported. More info: https://learn.microsoft.com/en-us/azure/cost-management-billing/dataset-schema/schema-index#latest-dataset-schema-files"
-  }
 }
 
-/* ----------------------------- Export version ----------------------------- */
-# More info: https://learn.microsoft.com/en-us/azure/cost-management-billing/dataset-schema/schema-index#latest-dataset-schema-files
 variable "export_version" {
-  description = <<-EOT
-  Version of the billing export. Should be use with `export_type`.
-  
-  Valid values are:
-  - `1.2-preview`, `1.0r2` & `1.0` for `FOCUS`
-  - `2023-12-01-preview` for Cost and usage details (EA, MCA, MPA and CSP)
-  - `2019-11-01` for Cost and usage details (MOSA)
-  
-  E.g.: `1.2-preview`, `1.0r2`, `1.0`, `2023-12-01-preview`, `2019-11-01`
-  EOT
+  description = <<DESCRIPTION
+  Version of the FinOps FOCUS billing export.
+
+  Learn more: https://learn.microsoft.com/en-us/azure/cost-management-billing/dataset-schema/cost-usage-details-focus
+
+  Examples:
+
+  - `1.2-preview`
+  - `1.0`
+  - `1.0r2`
+  - `1.0-preview`
+
+  DESCRIPTION
 
   type     = string
   nullable = false
-
-  validation {
-    condition = contains([
-      # FOCUS for
-      # - Enterprise Agreement (EA)
-      # - Microsoft Customer Agreement (MCA)
-      "1.2-preview",
-      "1.0",
-      "1.0r2",
-
-      # Cost and usage details for
-      # - Enterprise Agreement (EA)
-      # - Microsoft Customer Agreement (MCA)
-      # - Microsoft Partner Agreement (MPA)
-      # - Cloud Service Provider (CSP) subscription
-      "2023-12-01-preview",
-
-      # Cost and usage details for:
-      # - Pay-as-you-go (MOSA)
-      "2019-11-01"
-
-      # Older versions aren't supported by this module
-    ], var.export_version)
-    error_message = "Unsupported version. Please the check your `export_type` and the associated version. More info: https://learn.microsoft.com/en-us/azure/cost-management-billing/dataset-schema/schema-index#latest-dataset-schema-files"
-  }
 }
 
-/* ------------------------------ Export scope ------------------------------ */
-variable "export_scope_and_id" {
-  description = <<-EOT
-  Scope and the corresponding id for the billing export.
-  
-  Valid values for scope are:
-  - `billing-account` for an export at the billing account level (recommended)
-  - `subscription` for an export at the subscription level
-  
-  E.g.: 
-  ```
-  {
-    scope = "billing-account"
-    id    = "1234567890"
-  }
-  ```
-  EOT
+variable "scope_id" {
+  description = <<DESCRIPTION
+  Id of the scope of of the FinOps FOCUS billing export.
 
-  type = object({
-    scope = string
-    id    = string
-  })
+  Can be a subscription, billing account, invoice section, CSP customer, etc.
+
+  Examples:
+
+  - `/subscriptions/00000000-0000-4000-0000-000000000000` - Subscription
+  - `/providers/Microsoft.Billing/billingAccounts/000000`- Enterprise Agreement (EA)
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31` - Microsoft Customer Agreement (MCA)
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30` - Microsoft Partner Agreement (MPA)
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/billingProfiles/0000-0000-000-000` - MCA Billing profile
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/billingProfiles/00000000-0000-4000-0000-000000000000` - MPA Billing profile
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/billingProfiles/0000-0000-000-000/invoiceSections/0000-0000-000-000` - MCA Invoice section
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/billingProfiles/0000-0000-000-000/invoiceSections/00000000-0000-4000-0000-000000000000` - MCA Invoice section
+  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/customers/00000000-0000-4000-0000-000000000000` - CSP Customer (attached to a MPA)
+
+  DESCRIPTION
+
+  type     = string
   nullable = false
-
-  validation {
-    condition = contains([
-      "billing-account",
-      "subscription"],
-    var.export_scope_and_id.scope)
-    error_message = "Valid values are: `billing-account` and `subscription`"
-  }
 }
 
 /* ------------------------------- Export Name ------------------------------ */
-variable "export_name" {
-  description = <<-EOT
-  Name of the billing export. 
-  
-  Validation: Export name must be alphanumeric, without whitespace, and 3 to 
-  64 characters in length.
+variable "name" {
+  description = <<DESCRIPTION
+  Name of the FinOps FOCUS billing export.
 
-  E.g.: `focus-export-for-sub-63aa77b3-5e14-4c6d-a895-27f9d8443e37` (57 
-  characters)
-  EOT
+  Validation: Export name must be alphanumeric, without whitespace, and 3 to 64 characters in length.
+
+  Example:
+
+  - `focus-export-for-sub-63aa77b3-5e14-4c6d-a895-27f9d8443e37` (57 characters)
+
+  DESCRIPTION
 
   type     = string
   nullable = false
 
   validation {
-    condition     = can(regex("^[a-zA-Z0-9-]{3,64}$", var.export_name))
+    condition     = can(regex("^[a-zA-Z0-9-]{3,64}$", var.name))
     error_message = "Export name must be alphanumeric, without whitespace, and 3 to 64 characters in length."
   }
 }
 
-/* ---------------------------- Export Directory ---------------------------- */
-variable "export_directory" {
-  description = <<-EOT
-  Directory to place the billing export in.
-  
-  Validation: Directory name cannot end with a forward slash(/) or dot(.)
+variable "description" {
+  description = <<DESCRIPTION
+  Description of the FinOps FOCUS billing export.
 
-  E.g.: `subscription_63aa77b3-5e14-4c6d-a895-27f9d8443e37` with 
-  `63aa77b3-5e14-4c6d-a895-27f9d8443e37` being the subscription id
-  EOT
+  DESCRIPTION
 
   type     = string
   nullable = false
 }
 
-/* ---------------------------- Export start date --------------------------- */
-variable "export_start_date" {
+variable "directory" {
+  description = <<-DESCRIPTION
+  Directory to place the billing export in.
+
+  Validation: Directory name cannot end with a forward slash(/) or dot(.)
+
+  Example:
+
+  - `subscription_63aa77b3-5e14-4c6d-a895-27f9d8443e37` with `63aa77b3-5e14-4c6d-a895-27f9d8443e37` being the subscription id
+
+  DESCRIPTION
+
+  type     = string
+  nullable = false
+}
+
+variable "start_date" {
   description = <<-EOT
   Start date of the export.
-  You can go as far as 9 years in the past.
-  
-  Validation: Date should be in the past and it must be the first day of the month.
+  You can go as far as 7 years in the past.
+  Date should be:
+  - in the past
+  - before `var.creation_date`
+  - the first day of the month
 
-  E.g.: `2024-01-01`
+  Learn more: https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#data-retention-limits-by-dataset
+
+
+  Examples:
+
+  - `2022-05-01`
+  - `2026-01-01`
+  - `2026-06-01`
+
   EOT
 
   type     = string
-  default  = "2020-01-01"
   nullable = false
 
   validation {
-    condition     = endswith(var.export_start_date, "-01")
+    condition     = endswith(var.start_date, "-01")
     error_message = "Date should be in the past and it must be the first day of the month."
   }
 }
 
-variable "export_creation_date" {
-  description = <<-EOT
+variable "creation_date" {
+  description = <<DESCRIPTION
   Creation date of the export.
 
-  E.g.: `2024-07-22`
-  EOT
+  This will be used only to create the backfill months list if `enable_backfill` is set to `true`.
+
+  Examples:
+
+  - `2025-12-22`
+  - `2026-01-05`
+  - `2026-06-06`
+
+  DESCRIPTION
 
   type     = string
   nullable = false
 }
 
-/* ----------------------------- Export end date ---------------------------- */
-variable "export_end_date" {
-  description = <<-EOT
+variable "end_date" {
+  description = <<DESCRIPTION
   End date of the export.
-  
+
   Validation: Date should be in the future and it must be the first day of the month.
 
-  E.g.: `2050-01-01`
-  EOT
+  Example:
+
+  - `2050-01-01`
+
+  DESCRIPTION
 
   type     = string
-  default  = "2050-01-01"
   nullable = false
 
   validation {
-    condition     = endswith(var.export_end_date, "-01")
-    error_message = "Date should be in the future and it must be the first day of the month."
+    condition     = endswith(var.end_date, "-01")
+    error_message = "Date should be in the future and must be the first day of the month. (e.g. if `creation_date` is `2026-06-07`, then `end_date` must be at least `2026-07-01` or any first day of the month in the future like `2040-01-01` or `2050-01-01`)"
   }
 }
 
-/* ------------------------- Enable export backfill ------------------------- */
 variable "enable_backfill" {
-  description = <<-EOT
-  Option to enable or not a backfill for the export.
+  description = <<DESCRIPTION
+  Enable the export backfill.
 
-  E.g.: `true`, `false`
-  EOT
+  If set to `true`, the module willrequest backfill based on `var.start_date` and `car.creation_date`.
+
+  This option is recommended rather than going via the Azure portal (portal.azure.com) as it's limited to 13 months and you need to request one month at a time (if 13 months then 13 requests) thus this module to automate this task.
+
+  Please note that retention is limited to 7 years and a `var.start_date` older than the current date will fail.
+
+  Learn more: https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports#data-retention-limits-by-dataset
+
+  Examples:
+
+  - `true`
+  - `false`
+
+  DESCRIPTION
 
   type     = bool
-  default  = false
-  nullable = false
-}
-
-/* ---------------------------------- Tags ---------------------------------- */
-variable "tags" {
-  description = <<-EOT
-  Tags to apply to all created resources.
-  
-  E.g.:
-  ```
-  {
-    createdBy = "Terraform"
-  }
-  ```
-  EOT
-
-  type = map(string)
-  default = {
-    createdBy = "Terraform"
-  }
   nullable = false
 }
