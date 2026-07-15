@@ -32,6 +32,34 @@ terraform apply
 ## Main code
 
 ```hcl
+# Storage account and container
+module "focus_billing_storage_account" {
+  source  = "Azure/avm-res-storage-storageaccount/azurerm"
+  version = "0.7.2"
+
+  name = module.naming.storage_account.name_unique
+
+  location  = module.resource_group.location
+  parent_id = module.resource_group.resource_id
+
+  public_network_access_enabled   = true
+  shared_access_key_enabled       = true
+
+  network_rules = {
+    ip_rules = [var.ipv4_address]
+  }
+
+  containers = {
+    focus = {
+      name = "focus"
+      [...]
+    }
+  }
+
+  [...]
+}
+
+# FinOps FOCUS export
 module "finops_focus_billing_export" {
   source = "../.."
 
