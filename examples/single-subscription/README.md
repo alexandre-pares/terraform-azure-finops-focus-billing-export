@@ -2,6 +2,8 @@
 
 This examples creates a FinOps FOCUS billing export scoped to a single subscription.
 
+![FinOps FOCUS billing export for a single subscription](../../assets/single_subscription_export.png)
+
 ## Usage
 
 First set the following variables:
@@ -47,6 +49,8 @@ module "finops_focus_billing_export" {
   enable_backfill = true
 }
 ```
+
+![FinOps FOCUS billing export for a single subscription - Directory](../../assets/single_subscription_directory.png)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
