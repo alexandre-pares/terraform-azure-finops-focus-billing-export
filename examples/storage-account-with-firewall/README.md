@@ -2,6 +2,10 @@
 
 This examples creates a FinOps FOCUS billing export scoped to a single subscription with a storage account behind a firewall (1 ip_rule).
 
+![FinOps FOCUS billing export for a single subscription with a storage account behind a firewall](../../assets/subscription_st_with_firewall_export.png)
+
+![FinOps FOCUS billing export for a single subscription with a storage account behind a firewall - Network Settings](../../assets/subscription_st_with_firewall_network_settings.png)
+
 ## Usage
 
 First set the following variables:
@@ -48,6 +52,8 @@ module "finops_focus_billing_export" {
   enable_backfill = true
 }
 ```
+
+![FinOps FOCUS billing export for a single subscription with a storage account behind a firewall - Directory](../../assets/subscription_st_with_firewall_directory.png)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

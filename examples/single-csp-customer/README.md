@@ -6,6 +6,8 @@ Because this requires access to the MPA billing account, the CSP customer cannot
 
 Additionally, we recommend setting up an object replication rule between the CSP and the customer tenant to allow the customer access to his billing dataset from his tenant.
 
+![FinOps FOCUS billing export for a single CSP Customer](../../assets/single_csp_customer_export.png)
+
 ## Usage
 
 First set the following variables:
@@ -53,6 +55,8 @@ module "finops_focus_billing_export" {
   enable_backfill = true
 }
 ```
+
+![FinOps FOCUS billing export for a single CSP Customer - Directory](../../assets/single_csp_customer_directory.png)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
