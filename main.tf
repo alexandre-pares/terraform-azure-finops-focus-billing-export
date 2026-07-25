@@ -58,22 +58,18 @@ resource "azapi_resource" "focus_export" {
       exportDescription     = var.description
     }
   }
-}
 
-/* -------------------- Get a list of months to backfill -------------------- */
-module "months_to_backfill" {
-  source = "./modules/months_to_backfill"
-
-  # Generate list of month to backfill,
-  # if `var.enable_backfill` is `false`, then only the current month will be backfilled at export creation
-  start_date    = var.enable_backfill ? var.start_date : "${substr(var.creation_date, 0, 7)}-01"
-  creation_date = var.creation_date
-  end_date      = var.end_date
+  timeouts {
+    create = "5m"
+    read   = "5m"
+    update = "5m"
+    delete = "5m"
+  }
 }
 
 /* ------------------------------ Backfill job ------------------------------ */
 resource "azapi_resource_action" "backfill_job" {
-  for_each = { for i, month in module.months_to_backfill.months_to_backfill : i => month }
+  for_each = local.months_to_backfill
 
   type                   = "Microsoft.CostManagement/exports@2023-07-01-preview"
   resource_id            = azapi_resource.focus_export.id
@@ -94,6 +90,9 @@ resource "azapi_resource_action" "backfill_job" {
   }
 
   timeouts {
-    read = "10m"
+    create = "5m"
+    read   = "5m"
+    update = "5m"
+    delete = "5m"
   }
 }

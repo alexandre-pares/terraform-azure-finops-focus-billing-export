@@ -36,7 +36,8 @@ terraform apply
 
 ```hcl
 module "finops_focus_billing_export" {
-  source = "../.."
+  source  = "alexandre-pares/finops-focus-billing-export/azure"
+  version = "2.1.0"
 
   name           = substr("finops-focus-billing-export-for-csp-cutomer-${var.customer_id}", 0, 64)
   description    = "FinOps FOCUS billing export for CSP Customer ${var.customer_id}"
@@ -48,7 +49,7 @@ module "finops_focus_billing_export" {
 
   directory = "v1.2-preview/csp_customer_${var.customer_id}"
 
-  creation_date = "2026-06-07"
+  creation_date = "2026-07-25"
   start_date    = "2026-02-01"
   end_date      = "2050-01-01"
 
@@ -64,21 +65,20 @@ module "finops_focus_billing_export" {
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.8 |
-| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | 2.10.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | 0.14.0 |
+| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | 2.11.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.10.0 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.11.0 |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_finops_focus_billing_export"></a> [finops\_focus\_billing\_export](#module\_finops\_focus\_billing\_export) | ../.. | n/a |
-| <a name="module_focus_billing_storage_account"></a> [focus\_billing\_storage\_account](#module\_focus\_billing\_storage\_account) | Azure/avm-res-storage-storageaccount/azurerm | 0.7.2 |
+| <a name="module_focus_billing_storage_account"></a> [focus\_billing\_storage\_account](#module\_focus\_billing\_storage\_account) | Azure/avm-res-storage-storageaccount/azurerm | 0.7.3 |
 | <a name="module_naming"></a> [naming](#module\_naming) | Azure/naming/azurerm | 0.4.3 |
 | <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group) | Azure/avm-res-resources-resourcegroup/azurerm | 0.4.0 |
 
@@ -86,7 +86,7 @@ module "finops_focus_billing_export" {
 
 | Name | Type |
 | ---- | ---- |
-| [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/2.10.0/docs/data-sources/client_config) | data source |
+| [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/2.11.0/docs/data-sources/client_config) | data source |
 
 ## Inputs
 

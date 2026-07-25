@@ -12,7 +12,7 @@ Learn more about FOCUS in this [FinOps Foundation Insights article](https://www.
 
 ## Supported scopes:
 
-- Enterprise Agreement (EA): Billing account, enrollment?, department?
+- Enterprise Agreement (EA): Billing account, department and enrollment
 - Microsoft Customer Agreement (MCA), including MCA enterprise (MCA-E): Billing account, billing profile and invoice section
 - Microsoft Partner Agreement (MPA): Billing account, customer and billing profile
 - Subscription and resource group
@@ -38,7 +38,8 @@ Detailed examples are available under the [`./examples`](./examples/) directory.
 
 ```hcl
 module "finops_focus_billing_export" {
-  source = "../.."
+  source  = "alexandre-pares/finops-focus-billing-export/azure"
+  version = "2.1.0"
 
   name           = substr("finops-focus-billing-export-for-sub-${var.subscription_id}", 0, 64)
   description    = "FinOps FOCUS billing export for subscription ${var.subscription_id}"
@@ -138,6 +139,152 @@ Check if your subscription type is supported here: https://learn.microsoft.com/e
 
 Register `Microsoft.CostManagementExports` from the source subscription.
 
+### Invalid definition timePeriod
+
+<details>
+
+<summary>Invalid definition timePeriod</summary>
+
+```bash
+╷
+│ Error: Failed to perform action
+│
+│   with module.finops_focus_billing_export.azapi_resource_action.backfill_job["2026-07"],
+│   on ../../main.tf line 78, in resource "azapi_resource_action" "backfill_job":
+│   78: resource "azapi_resource_action" "backfill_job" {
+│
+│ performing action run of "Resource: (ResourceId \"/subscriptions/xxxx-xxxx-xxxx-xxxx/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-xxxx-xxxx-xxxx-xxxx\" / Api Version \"2023-07-01-preview\")": POST
+│ https://management.azure.com/subscriptions/xxxx-xxxx-xxxx-xxxx/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-xxxx-xxxx-xxxx-xxxx/run
+│ --------------------------------------------------------------------------------
+│ RESPONSE 400: 400 Bad Request
+│ ERROR CODE: BadRequest
+│ --------------------------------------------------------------------------------
+│ {
+│   "error": {
+│     "code": "BadRequest",
+│     "message": "Request properties validation failed: Invalid definition timePeriod; 'to' value cannot be in the future."
+│   }
+│ }
+│ --------------------------------------------------------------------------------
+│
+╵
+```
+
+</details>
+
+Check `var.creation_date` and `var.start_date`. They should not be greater that the current date.
+
+### context deadline exceeded
+
+<details>
+
+<summary>context deadline exceeded</summary>
+
+```bash
+[...]
+module.finops_focus_billing_export.azapi_resource.focus_export: Still creating... [04m53s elapsed]
+module.finops_focus_billing_export.azapi_resource.focus_export: Still creating... [05m06s elapsed]
+module.finops_focus_billing_export.azapi_resource.focus_export: Still creating... [05m16s elapsed]
+╷
+│ Error: Failed to create/update resource
+│
+│   with module.finops_focus_billing_export.azapi_resource.focus_export,
+│   on ../../main.tf line 1, in resource "azapi_resource" "focus_export":
+│    1: resource "azapi_resource" "focus_export" {
+│
+│ creating/updating Resource: (ResourceId "/subscriptions/xxxx-xxxx-xxxx-xxxx/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-xxxx-xxxx-xxxx-xxxx" / Api Version "2023-07-01-preview"): context deadline
+│ exceeded
+╵
+```
+
+</details>
+
+This can happen when the Azure Cost Management API endpoint is blocked (e.g. by your corporate proxy) as FinOps FOCUS export creation should only takes a few seconds to create.
+
+Add `costmanagement.trafficmanager.net` to your proxy allowlist. (This is because the `Microsoft.CostManagement/exports@2023-07-01-preview` API will return a `Location` header on PUT request that point to `https://costmanagement.trafficmanager.net/***`)
+
+Additionally, you can enable Terraform debugs's logs to investigate the issues.
+
+```bash
+# Enable Terraform debug Logs
+# Learn more: https://developer.hashicorp.com/terraform/internals/debugging
+export TF_LOG="DEBUG"
+
+# Set TF log to default verbosity
+export TF_LOG=""
+```
+
+Sadly, even if the `costmanagement.trafficmanager.net` URL is blocked, the FinOps FOCUS export will be created and you will encounter an additional error once the URL is whitelisted once you apply again the Teraform:
+
+```bash
+╷
+│ Error: Resource already exists
+│
+│   with module.finops_focus_billing_export.azapi_resource.focus_export,
+│   on ../../main.tf line 1, in resource "azapi_resource" "focus_export":
+│    1: resource "azapi_resource" "focus_export" {
+│
+│ a resource with the ID "/subscriptions/xxxx-xxxx-xxxx-xxxx/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-xxxx-xxxx-xxxx-xxxx" already exists - to be managed via Terraform this resource needs to be
+│ imported into the State. Please see the resource documentation for "azapi_resource" for more information
+╵
+```
+
+You can either import it using Terraform or manually delete it from the Azure Portal and apply again the Terraform.
+
+To import, add the following code to your `main.tf`.
+
+```hcl
+import {
+  to = module.finops_focus_billing_export.azapi_resource.focus_export
+  identity = {
+    id   = "/subscriptions/xxxx-xxxx-xxxx-xxxx/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-xxxx-xxxx-xxxx-xxxx"
+    type = "Microsoft.CostManagement/exports@2023-07-01-preview"
+  }
+}
+```
+
+Once imported, you can safely remove the import block.
+
+### An export is already in progress
+
+<details>
+
+<summary>An export is already in progress</summary>
+
+```bash
+╷
+│ Error: Failed to perform action
+│
+│   with module.finops_focus_billing_export.azapi_resource_action.backfill_job["2026-06"],
+│   on ../../main.tf line 71, in resource "azapi_resource_action" "backfill_job":
+│   71: resource "azapi_resource_action" "backfill_job" {
+│
+│ performing action run of "Resource: (ResourceId \"/subscriptions/xxxx-xxxx-xxxx-xxxx/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-4-sub-xxxx-xxxx-xxxx-xxxx\" / Api Version \"2023-07-01-preview\")": POST
+│ https://management.azure.com/subscriptions/xxxx-xxxx-xxxx-xxxx/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-4-sub-xxxx-xxxx-xxxx-xxxx/run
+│ --------------------------------------------------------------------------------
+│ RESPONSE 409: 409 Conflict
+│ ERROR CODE: Conflict
+│ --------------------------------------------------------------------------------
+│ {
+│   "error": {
+│     "code": "Conflict",
+│     "message": "An export is already in progress. Please wait for the current export to complete before starting a new one."
+│   }
+│ }
+│ --------------------------------------------------------------------------------
+│
+╵
+```
+
+</details>
+
+This can happen you try to update the `var.creation_date` with a new value in the same month than the previous value.
+
+To fix this, you can either:
+- wait for the backfill job to succeed and apply again the Terraform or
+- recreate the export again as this error only happen when creating new exports
+- revert the value of `var.creation_date` to it's previous state and manually run the export for the current month using the Azure Portal
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -145,7 +292,6 @@ Register `Microsoft.CostManagementExports` from the source subscription.
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.8 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | ~> 2.10 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.14 |
 
 ## Providers
 
@@ -155,9 +301,7 @@ Register `Microsoft.CostManagementExports` from the source subscription.
 
 ## Modules
 
-| Name | Source | Version |
-| ---- | ------ | ------- |
-| <a name="module_months_to_backfill"></a> [months\_to\_backfill](#module\_months\_to\_backfill) | ./modules/months_to_backfill | n/a |
+No modules.
 
 ## Resources
 
@@ -186,6 +330,6 @@ Register `Microsoft.CostManagementExports` from the source subscription.
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_months_to_backfill"></a> [months\_to\_backfill](#output\_months\_to\_backfill) | List of months to backfill.<br/><br/>  Example if `var.start_date` is `2026-01` and `var.creation_date` is `2026-06-06`:<pre>hcl<br/>  [<br/>    {<br/>      end_date   = "2026-01-31T00:00:00Z"<br/>      start_date = "2026-01-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-02-28T00:00:00Z"<br/>      start_date = "2026-02-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-03-31T00:00:00Z"<br/>      start_date = "2026-03-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-04-30T00:00:00Z"<br/>      start_date = "2026-04-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-05-31T00:00:00Z"<br/>      start_date = "2026-05-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-06-06T00:00:00Z"<br/>      start_date = "2026-06-01T00:00:00Z"<br/>    }<br/>  ]</pre> |
+| <a name="output_months_to_backfill"></a> [months\_to\_backfill](#output\_months\_to\_backfill) | Map of months to backfill, empty map will be returned if `var.enable_backfill` is `false`:<br/><br/>  - `start_date` Start date of the month aligned with RFC 3339<br/>  - `end_date` End date of the month, aligned with RFC 3339<br/><br/>  Example if `var.start_date` is `2025-11`, `var.creation_date` is `2026-07-25` and `var.enable_backfill` is `true`:<pre>hcl<br/>  {<br/>    "2025-11" = {<br/>      "end_date" = "2025-11-30T00:00:00Z"<br/>      "start_date" = "2025-11-01T00:00:00Z"<br/>    }<br/>    "2025-12" = {<br/>      "end_date" = "2025-12-31T00:00:00Z"<br/>      "start_date" = "2025-12-01T00:00:00Z"<br/>    }<br/>    "2026-01" = {<br/>      "end_date" = "2026-01-31T00:00:00Z"<br/>      "start_date" = "2026-01-01T00:00:00Z"<br/>    }<br/>    "2026-02" = {<br/>      "end_date" = "2026-02-28T00:00:00Z"<br/>      "start_date" = "2026-02-01T00:00:00Z"<br/>    }<br/>    "2026-03" = {<br/>      "end_date" = "2026-03-31T00:00:00Z"<br/>      "start_date" = "2026-03-01T00:00:00Z"<br/>    }<br/>    "2026-04" = {<br/>      "end_date" = "2026-04-30T00:00:00Z"<br/>      "start_date" = "2026-04-01T00:00:00Z"<br/>    }<br/>    "2026-05" = {<br/>      "end_date" = "2026-05-31T00:00:00Z"<br/>      "start_date" = "2026-05-01T00:00:00Z"<br/>    }<br/>    "2026-06" = {<br/>      "end_date" = "2026-06-30T00:00:00Z"<br/>      "start_date" = "2026-06-01T00:00:00Z"<br/>    }<br/>    "2026-07" = {<br/>      "end_date" = "2026-07-25T00:00:00Z"<br/>      "start_date" = "2026-07-01T00:00:00Z"<br/>    }<br/>  }</pre> |
 | <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id) | Id of the export.<br/><br/>  Examples:<br/><br/>  - `/subscriptions/00000000-0000-4000-0000-000000000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-00000000-0000-4000-0000-0000` - Subscription<br/>  - `/providers/Microsoft.Billing/billingAccounts/000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-ea-000000` - Enterprise Agreement (EA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-mca-00000000-0000-5000-3000-0000` - Microsoft Customer Agreement (MCA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-4000-0000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-mpa-00000000-0000-4000-0000-0000` - Microsoft Partner Agreement (MPA)<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-billing-profile-0000-0000-000-00` - MCA or MPA's Billing profile<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/invoiceSections/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-invoice-section-0000-0000-000-00` - MCA or MPA's Invoice section<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-5000-3000-000000000000:00000000-0000-4000-0000-000000000000_2019-05-31/BillingProfiles/0000-0000-000-000/invoiceSections/0000-0000-000-000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-invoice-section-00000000-0000-40` - MCA or MPA's Invoice section<br/>  - `/providers/Microsoft.Billing/billingAccounts/00000000-0000-4000-0000-000000000000:00000000-0000-4000-0000-000000000000_2018-09-30/customers/00000000-0000-4000-0000-000000000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-csp-cutomer-00000000-0000-4000-0` - CSP Customer (via MPA) |
 <!-- END_TF_DOCS -->
