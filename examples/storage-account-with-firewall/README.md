@@ -46,7 +46,7 @@ module "focus_billing_storage_account" {
   shared_access_key_enabled       = true
 
   network_rules = {
-    ip_rules = [var.ipv4_address]
+    ip_rules = [var.ipv4_address] # This is where you can whitelist some IP addresses
   }
 
   containers = {
@@ -61,7 +61,8 @@ module "focus_billing_storage_account" {
 
 # FinOps FOCUS export
 module "finops_focus_billing_export" {
-  source = "../.."
+  source  = "alexandre-pares/finops-focus-billing-export/azure"
+  version = "2.1.0"
 
   name           = substr("finops-focus-billing-export-4-sub-${var.subscription_id}", 0, 64)
   description    = "FinOps FOCUS billing export for subscription ${var.subscription_id}"
@@ -89,21 +90,20 @@ module "finops_focus_billing_export" {
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.8 |
-| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | 2.10.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | 0.14.0 |
+| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | 2.11.0 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.10.0 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.11.0 |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_finops_focus_billing_export"></a> [finops\_focus\_billing\_export](#module\_finops\_focus\_billing\_export) | ../.. | n/a |
-| <a name="module_focus_billing_storage_account"></a> [focus\_billing\_storage\_account](#module\_focus\_billing\_storage\_account) | Azure/avm-res-storage-storageaccount/azurerm | 0.7.2 |
+| <a name="module_focus_billing_storage_account"></a> [focus\_billing\_storage\_account](#module\_focus\_billing\_storage\_account) | Azure/avm-res-storage-storageaccount/azurerm | 0.7.3 |
 | <a name="module_naming"></a> [naming](#module\_naming) | Azure/naming/azurerm | 0.4.3 |
 | <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group) | Azure/avm-res-resources-resourcegroup/azurerm | 0.4.0 |
 
@@ -111,7 +111,7 @@ module "finops_focus_billing_export" {
 
 | Name | Type |
 | ---- | ---- |
-| [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/2.10.0/docs/data-sources/client_config) | data source |
+| [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/2.11.0/docs/data-sources/client_config) | data source |
 
 ## Inputs
 

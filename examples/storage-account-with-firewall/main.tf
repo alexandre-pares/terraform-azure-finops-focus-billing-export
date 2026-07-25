@@ -9,7 +9,7 @@ locals {
   tags = {
     createdBy         = "Terraform"
     module_repository = "github.com/alexandre-pares/terraform-azure-finops-focus-billing-export"
-    module_version    = "v2.0.0"
+    module_version    = "v2.1.0"
     environment       = "mgmt"
     application       = "finops-focus"
   }
@@ -29,7 +29,7 @@ module "resource_group" {
 
 module "focus_billing_storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.7.2"
+  version = "0.7.3"
 
   name = module.naming.storage_account.name_unique
 
@@ -81,7 +81,7 @@ module "finops_focus_billing_export" {
 
   directory = "v1.2-preview/sub_${var.subscription_id}"
 
-  creation_date = "2026-06-07"
+  creation_date = "2026-07-25"
   start_date    = "2026-04-01"
   end_date      = "2050-01-01"
 
