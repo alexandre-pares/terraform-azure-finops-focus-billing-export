@@ -35,17 +35,17 @@ terraform apply
 # Storage account and container
 module "focus_billing_storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.7.2"
+  version = "0.7.3"
 
   name = module.naming.storage_account.name_unique
 
   location  = module.resource_group.location
   parent_id = module.resource_group.resource_id
 
-  public_network_access_enabled   = true
   shared_access_key_enabled       = true
 
-  network_rules = {
+  public_network_access_enabled = true
+  network_rules                 = {
     ip_rules = [var.ipv4_address] # This is where you can whitelist some IP addresses
   }
 
@@ -62,7 +62,7 @@ module "focus_billing_storage_account" {
 # FinOps FOCUS export
 module "finops_focus_billing_export" {
   source  = "alexandre-pares/finops-focus-billing-export/azure"
-  version = "2.1.0"
+  version = "2.1.1"
 
   name           = substr("finops-focus-billing-export-4-sub-${var.subscription_id}", 0, 64)
   description    = "FinOps FOCUS billing export for subscription ${var.subscription_id}"
@@ -126,5 +126,6 @@ module "finops_focus_billing_export" {
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_export_resource_id"></a> [export\_resource\_id](#output\_export\_resource\_id) | Id of the export.<br/><br/>  Example:<br/><br/>  - `/subscriptions/00000000-0000-4000-0000-000000000000/providers/Microsoft.CostManagement/exports/finops-focus-billing-export-for-sub-00000000-0000-4000-0000-0000` |
-| <a name="output_months_backfilled"></a> [months\_backfilled](#output\_months\_backfilled) | List of months backfilled.<br/><br/>  Example if `var.start_date` is `2026-01` and `var.creation_date` is `2026-06-06`:<pre>hcl<br/>  [<br/>    {<br/>      end_date   = "2026-01-31T00:00:00Z"<br/>      start_date = "2026-01-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-02-28T00:00:00Z"<br/>      start_date = "2026-02-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-03-31T00:00:00Z"<br/>      start_date = "2026-03-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-04-30T00:00:00Z"<br/>      start_date = "2026-04-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-05-31T00:00:00Z"<br/>      start_date = "2026-05-01T00:00:00Z"<br/>    }<br/>    {<br/>      end_date   = "2026-06-06T00:00:00Z"<br/>      start_date = "2026-06-01T00:00:00Z"<br/>    }<br/>  ]</pre> |
+| <a name="output_months_backfilled"></a> [months\_backfilled](#output\_months\_backfilled) | Map of months to backfill, empty map will be returned if `var.enable_backfill` is `false`:<br/><br/>  - `start_date` Start date of the month aligned with RFC 3339<br/>  - `end_date` End date of the month, aligned with RFC 3339<br/><br/>  Example if `var.start_date` is `2026-01`, `var.creation_date` is `2026-07-25` and `var.enable_backfill` is `true`:<pre>hcl<br/>  {<br/>    "2026-01" = {<br/>      "end_date" = "2026-01-31T00:00:00Z"<br/>      "start_date" = "2026-01-01T00:00:00Z"<br/>    }<br/>    "2026-02" = {<br/>      "end_date" = "2026-02-28T00:00:00Z"<br/>      "start_date" = "2026-02-01T00:00:00Z"<br/>    }<br/>    "2026-03" = {<br/>      "end_date" = "2026-03-31T00:00:00Z"<br/>      "start_date" = "2026-03-01T00:00:00Z"<br/>    }<br/>    "2026-04" = {<br/>      "end_date" = "2026-04-30T00:00:00Z"<br/>      "start_date" = "2026-04-01T00:00:00Z"<br/>    }<br/>    "2026-05" = {<br/>      "end_date" = "2026-05-31T00:00:00Z"<br/>      "start_date" = "2026-05-01T00:00:00Z"<br/>    }<br/>    "2026-06" = {<br/>      "end_date" = "2026-06-30T00:00:00Z"<br/>      "start_date" = "2026-06-01T00:00:00Z"<br/>    }<br/>    "2026-07" = {<br/>      "end_date" = "2026-07-25T00:00:00Z"<br/>      "start_date" = "2026-07-01T00:00:00Z"<br/>    }<br/>  }</pre> |
+| <a name="output_storage_account_id"></a> [storage\_account\_id](#output\_storage\_account\_id) | Id of the storage account containing the FinOps FOCUS billing export.<br/><br/>  Example:<br/><br/>  - `/subscriptions/00000000-0000-4000-0000-000000000000/resourceGroups/rg-finops-focus-abcd/providers/Microsoft.Storage/storageAccounts/stfinopsfocusabcd` |
 <!-- END_TF_DOCS -->

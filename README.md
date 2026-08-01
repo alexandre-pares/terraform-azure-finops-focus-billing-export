@@ -39,7 +39,7 @@ Detailed examples are available under the [`./examples`](./examples/) directory.
 ```hcl
 module "finops_focus_billing_export" {
   source  = "alexandre-pares/finops-focus-billing-export/azure"
-  version = "2.1.0"
+  version = "2.1.1"
 
   name           = substr("finops-focus-billing-export-for-sub-${var.subscription_id}", 0, 64)
   description    = "FinOps FOCUS billing export for subscription ${var.subscription_id}"

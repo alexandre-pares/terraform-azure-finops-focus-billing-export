@@ -9,7 +9,7 @@ locals {
   tags = {
     createdBy         = "Terraform"
     module_repository = "github.com/alexandre-pares/terraform-azure-finops-focus-billing-export"
-    module_version    = "v2.1.0"
+    module_version    = "v2.1.1"
     environment       = "mgmt"
     application       = "finops-focus"
   }
@@ -38,22 +38,19 @@ module "focus_billing_storage_account" {
 
   account_sku_name = "Standard_LRS"
 
-  cross_tenant_replication_enabled = false
-  is_hns_enabled                   = false
-
-  public_network_access_enabled = true
-
   default_to_oauth_authentication = true
   shared_access_key_enabled       = true # Required for billing export
 
-  network_rules = null # Allow access from all networks (public)
+  # Allow access from all networks (Not recommended)
+  public_network_access_enabled = true
+  network_rules                 = null
 
   containers = {
     focus = {
       name = "focus"
       role_assignments = {
-        rbac_storage_blob_data_contributor = {
-          role_definition_id_or_name = "Storage Blob Data Owner"
+        rbac_storage_blob_data_reader = {
+          role_definition_id_or_name = "Storage Blob Data Reader"
           principal_id               = data.azapi_client_config.current.object_id
         }
       }
